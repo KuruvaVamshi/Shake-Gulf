@@ -1,3 +1,1 @@
-https://vatsalvarma.github.io/SHAKE-GULP/
-
-CloudFlare link: https://shakeandgulp.vhere.workers.dev/
+Git-hosted link :   https://kuruvavamshi.github.io/Shake-Gulf/
