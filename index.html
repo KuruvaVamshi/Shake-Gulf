@@ -21,11 +21,16 @@
             font-family: 'Poppins', sans-serif;
         }
 
+        html {
+            overflow-x: hidden;
+        }
+
         body {
             margin: 0;
             padding: 0;
             background: #ffffff;
             overflow-x: hidden;
+            max-width: 100%;
         }
 
         /* =============================
@@ -890,7 +895,6 @@
 
         .mobile-category-title {
             font-weight: 600;
-            font-size: 14px;
             cursor: pointer;
             padding: 4px 0;
             margin-top: 4px;
@@ -961,14 +965,14 @@
 
             .left-bottle {
                 width: 90px !important;
-                left: 15%;
+                left: 10%;
                 top: 59%;
                 transform: translate(-50%, -50%) scale(0.8);
                 z-index: 1;
             }
 
             .right-bottle {
-                right: -22%;
+                right: -27%;
                 top: 59%;
                 transform: translate(50%, -50%) scale(0.8);
                 z-index: 1;
@@ -1147,6 +1151,28 @@
             .read-card {
                 padding: 20px;
             }
+        }
+
+        .fade-slide {
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                translate 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                scale 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        .slide-out-left {
+            opacity: 0 !important;
+            translate: -150vw 0 !important;
+            scale: 0.5 !important;
+        }
+
+        .slide-out-right {
+            opacity: 0 !important;
+            translate: 150vw 0 !important;
+            scale: 0.5 !important;
+        }
+
+        .instant {
+            transition: none !important;
         }
     </style>
 </head>
@@ -1493,56 +1519,130 @@
             document.getElementById("jeeraImg").src = current.jeera;
         }
 
+        /* =============================
+           CAROUSEL TRANSITION CONTROLLER
+        ============================= */
+        let isAnimating = { home: false, traditional: false, wellness: false };
+
+        function animateCarousel(section, elements, dir, updateCallback) {
+            if (isAnimating[section]) return;
+            isAnimating[section] = true;
+
+            const outClass = dir === 'next' ? 'slide-out-left' : 'slide-out-right';
+            const inClass = dir === 'next' ? 'slide-out-right' : 'slide-out-left';
+
+            // 1. Slide everything out
+            elements.forEach(el => {
+                if (el) {
+                    el.classList.add('fade-slide');
+                    el.classList.add(outClass);
+                }
+            });
+
+            // 2. Wait for slide-out to finish (550 ms)
+            setTimeout(() => {
+                // Swap content while invisible
+                updateCallback();
+
+                // 3. Teleport to the opposite side instantly (small scale, off-screen)
+                elements.forEach(el => {
+                    if (el) {
+                        el.classList.add('instant');
+                        el.classList.remove(outClass);
+                        el.classList.add(inClass);
+                    }
+                });
+
+                // Force browser to register the instant move before re-enabling transitions
+                void elements[0].offsetWidth;
+
+                // 4. Slide back into centre — scale grows to 1 automatically (no class = default)
+                elements.forEach(el => {
+                    if (el) {
+                        el.classList.remove('instant');
+                        el.classList.remove(inClass);
+                    }
+                });
+
+                // 5. Clean up and unlock
+                setTimeout(() => {
+                    elements.forEach(el => {
+                        if (el) el.classList.remove('fade-slide');
+                    });
+                    isAnimating[section] = false;
+                }, 300);
+
+            }, 300);
+        }
+
+        /* =============================
+           HOME CAROUSEL (HERO)
+        ============================= */
+        function getHomeElements() {
+            return [
+                document.getElementById("homeTitle"),
+                document.querySelector(".bottle-container"),
+                document.querySelector(".left-bottle"),
+                document.querySelector(".right-bottle"),
+                document.getElementById("bottleName"),
+                document.getElementById("bottleContent")
+            ];
+        }
+
         function nextBottle() {
-            index = (index + 1) % bottles.length;
-            updateBottle();
+            animateCarousel('home', getHomeElements(), 'next', () => {
+                index = (index + 1) % bottles.length;
+                updateBottle();
+            });
         }
 
         function prevBottle() {
-            index = (index - 1 + bottles.length) % bottles.length;
-            updateBottle();
+            animateCarousel('home', getHomeElements(), 'prev', () => {
+                index = (index - 1 + bottles.length) % bottles.length;
+                updateBottle();
+            });
         }
 
         const productBottles = [{
             name: "Jeera butermilk",
             bottle: "https://i.ibb.co/7dPpVxrY/Jeera-butermilk-shots-544x652.png",
             content: " Ingredients: Curd • Water • Salt • Roasted Jeera (Cumin) Powder. \nA soothing traditional cooler infused with the gentle warmth of roasted cumin.",
-            link: "https://vatsalvarma.github.io/Jeerabtmlk-prbxx/"
+            link: "drinks/Jeera Buttermilk.html"
         }, {
             name: "Date Buttermilk",
             bottle: "https://i.ibb.co/4wRH7CC0/Date-Buttermilk-544x652.png",
             content: "Ingredients: Dates • Curd • Water. \nA naturally sweet, nourishing drink that blends cooling buttermilk with the goodness of dates.",
-            link: "https://vatsalvarma.github.io/Dates-prbxx/"
+            link: "drinks/Date Buttermilk.html"
         }, {
             name: "Nimbu Pudina",
             bottle: "https://i.ibb.co/zVPTgrjw/Nimbu-pudina-544x652.png",
             content: "Ingredients: Lemon • Fresh Mint (Pudina) • Water • Natural Sweetener • A pinch of Salt. \nA lively, cooling drink that blends citrus brightness with the refreshing lift of mint.",
-            link: "https://vatsalvarma.github.io/Nimpud-prbxx/"
+            link: "drinks/Nimbu Pudina.html"
         }, {
             name: "Ragi Buttermilk",
             bottle: "https://i.ibb.co/QjQrDvRf/Ragi-544x652.png",
             content: "Ingredients: Ragi (Finger Millet) • Curd • Water • Salt \nA nourishing blend of traditional millet and cooling buttermilk.",
-            link: "https://vatsalvarma.github.io/ragibrml-prbxxx/"
+            link: "drinks/Ragi Buttermilk.html"
         }, {
             name: "Sabja Lassi",
             bottle: "https://i.ibb.co/93Gx7RXY/Sabja-Lassi-544x652.png",
             content: "Ingredients: Curd • Water • Sabja (Basil) Seeds • Natural Sweetener. \nA creamy, cooling drink that blends traditional lassi with the soothing power of sabja seeds.",
-            link: "https://vatsalvarma.github.io/Sabjalass-prbxs/"
+            link: "drinks/Sabja Lassi.html"
         }, {
             name: "Nimbu Sabja",
             bottle: "https://i.ibb.co/5XBZZR0g/Nimbu-Sabja-544x652.png",
             content: "Ingredients: Lemon • Sabja (Basil) Seeds • Water • Natural Sweetener • \nA pinch of Salt. A zesty, cooling drink that combines citrus freshness with the soothing power of sabja seeds.",
-            link: "https://vatsalvarma.github.io/Nmpsabja/"
+            link: "drinks/Nimbu Sabja.html"
         }, {
             name: "Buttermilk",
             bottle: "https://i.ibb.co/V0w5CkMV/Buttermilk-544x652.png",
             content: "Ingredients: Curd • Water • Salt. \nA light, traditional Indian cooler made for everyday balance.",
-            link: "https://vatsalvarma.github.io/Sweetbtmlk-prbxx/"
+            link: "drinks/Buttermilk.html"
         }, {
             name: "Masala Buttermilk",
             bottle: "https://i.ibb.co/CsmVtxTg/Masala-Buttermilk-544x652.png",
             content: "Ingredients: Curd • Water • Ginger • Curry Leaves • Coriander Leaves • Green Chillies • Salt \nA spiced traditional cooler that refreshes the body while gently supporting digestion",
-            link: "https://vatsalvarma.github.io/Masala-btmlk-prbxx/"
+            link: "drinks/Masala Buttermilk.html"
         }];
         let productIndex = 0;
 
@@ -1560,51 +1660,67 @@
             };
         }
 
+        /* =============================
+           TRADITIONAL DRINKS CAROUSEL
+        ============================= */
+        function getTraditionalElements() {
+            return [
+                document.getElementById("productBottleImage"),
+                document.getElementById("productBottleName"),
+                document.getElementById("productTitleName"),
+                document.getElementById("productContent")
+            ];
+        }
+
         function nextProductBottle() {
-            productIndex = (productIndex + 1) % productBottles.length;
-            updateProductBottle();
+            animateCarousel('traditional', getTraditionalElements(), 'next', () => {
+                productIndex = (productIndex + 1) % productBottles.length;
+                updateProductBottle();
+            });
         }
 
         function prevProductBottle() {
-            productIndex = (productIndex - 1 + productBottles.length) % productBottles.length;
-            updateProductBottle();
+            animateCarousel('traditional', getTraditionalElements(), 'prev', () => {
+                productIndex = (productIndex - 1 + productBottles.length) % productBottles.length;
+                updateProductBottle();
+            });
         }
 
         const shots = [{
             name: "Amla Shot",
             img: "https://i.ibb.co/Nv72jd4/Amla-shadow-elements-544x652.png",
             content: "Ingredients: Amla (Indian Gooseberry) • Water • Honey • Ginger • A pinch of Salt. \nA tangy, refreshing wellness shot packed with traditional goodness.",
-            link: "https://vatsalvarma.github.io/Amla-prbrxx/"
+            link: "drinks/Amla Shot.html"
         }, {
             name: "Moringa Shot",
             img: "https://i.ibb.co/GQ08dSY6/Moringa-544x652.png",
             content: "Ingredients: Moringa Leaf Extract • Water • Ginger • Honey • A pinch of Salt. \nA vibrant green wellness shot made from one of nature’s most nutrient-rich leaves",
-            link: "https://vatsalvarma.github.io/Moringa-prbxx/"
+            link: "drinks/Moringa Shot.html"
         }, {
             name: "Neem Shot",
             img: "https://i.ibb.co/Ps3cPNPP/Neem-544x652.png",
             content: "Ingredients: Neem Leaf Extract • Water • Honey • A touch of Citric Balance. \nA bold, traditional wellness shot known for its purifying and balancing nature.",
-            link: "https://vatsalvarma.github.io/Neem-prbxx/"
+            link: "drinks/Neem Shot.html"
         }, {
             name: "Ginger Shot",
             img: "https://i.ibb.co/n8qjj6ZZ/Gingger-shots-544x652.png",
             content: "Ingredients: Ginger Juice • Lemon Juice • Honey • Pepper Powder \nA bold, concentrated wellness shot crafted to awaken your system naturally.",
-            link: "https://vatsalvarma.github.io/Ginger-prbxx/"
+            link: "drinks/Ginger Shot.html"
         }, {
             name: "WheatGrass Shot",
             img: "https://i.ibb.co/wxcnDn5/Wheat-Grass-544x652.png",
             content: "Ingredients: Fresh Wheatgrass Extract • Water • A touch of Lemon. \nA vibrant green wellness shot made from freshly extracted wheatgrass.",
-            link: "https://vatsalvarma.github.io/wheatgrass-prbxxx/"
+            link: "drinks/Wheatgrass Shot.html"
         }, {
             name: "GinggerTurmeric Shot",
             img: "https://i.ibb.co/PZW0sHP1/Gingger-Turmeric-shots-544x652.png",
             content: "Ingredients: Ginger Juice • Lemon Juice • Honey • Pepper Powder. \nA bold, concentrated wellness shot crafted to awaken your system naturally.",
-            link: "https://vatsalvarma.github.io/GingTer-prbxx/"
+            link: "drinks/Ginger Turmeric Shot.html"
         }, {
             name: "Barley Shot",
             img: "https://i.ibb.co/67qt36GY/Barley-544x652.png",
             content: "Ingredients: Barley Extract • Water • Lemon Juice • Honey • A pinch of Salt. \nA light, refreshing traditional drink known for its cooling and hydrating nature.",
-            link: "https://vatsalvarma.github.io/Barley-prbxx/"
+            link: "drinks/Barley Drink.html"
         }];
         let shotIndex = 0;
 
@@ -1618,14 +1734,30 @@
             }
         }
 
+        /* =============================
+           WELLNESS SHOTS CAROUSEL
+        ============================= */
+        function getWellnessElements() {
+            return [
+                document.getElementById("shotBottle"),
+                document.getElementById("shotName"),
+                document.getElementById("shotTitle"),
+                document.getElementById("shotContent")
+            ];
+        }
+
         function nextShot() {
-            shotIndex = (shotIndex + 1) % shots.length;
-            updateShot();
+            animateCarousel('wellness', getWellnessElements(), 'next', () => {
+                shotIndex = (shotIndex + 1) % shots.length;
+                updateShot();
+            });
         }
 
         function prevShot() {
-            shotIndex = (shotIndex - 1 + shots.length) % shots.length;
-            updateShot();
+            animateCarousel('wellness', getWellnessElements(), 'prev', () => {
+                shotIndex = (shotIndex - 1 + shots.length) % shots.length;
+                updateShot();
+            });
         }
 
         updateShot();
@@ -1666,6 +1798,11 @@
             setTimeout(forceFixPosition, 300);
         });
         window.addEventListener("resize", forceFixPosition);
+
+
+
+
+
     </script>
 </body>
 
